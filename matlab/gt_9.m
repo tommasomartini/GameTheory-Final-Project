@@ -9,16 +9,18 @@ clc;
 %% Parameters
 img_name = 'chess.jpg'; % name of the image
 t = 1;  % initial number of individuals in the population
-sigma = 1;    % standard deviation
+sigma = 150;    % standard deviation
 % delta = 0.01;   % maximum distance between two probs vectors to stop the loop
-num_cycles = 100;   % number of iterations per cluster (should be automatically found!)
+num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
 thr = 80;  % percentage of the highest probabilities to keep
-num_clusters = 3;   % number of clusters to find (should be automatically found!)
+num_clusters = 4;   % number of clusters to find (should be automatically found!)
 
 %% Main body
 
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
+
+% img = img(1 : 20, 1 : 20);
 
 % img = [ 200, 200, 200, 130;
 %         200, 200, 200, 65
@@ -44,15 +46,15 @@ img = rgb2gray(img_col);    % ...and bring it in b&w
 n = img_width * img_height; % number of pixels
 
 % just for debugging: try to get a 0-1 image (only 2 color levels)
-for i = 1 : img_width 
-    for j = 1 : img_height
-        if img(j, i) >= 127
-            img(j, i) = 200;
-        else
-            img(j, i) = 100;
-        end
-    end
-end
+% for i = 1 : img_width 
+%     for j = 1 : img_height
+%         if img(j, i) >= 127
+%             img(j, i) = 220;
+%         else
+%             img(j, i) = 80;
+%         end
+%     end
+% end
 
 % Show the original image
 figure; imshow(img); title('Original');
@@ -75,8 +77,6 @@ new_x = ones(n, 1) / n; % vector used to update x
 img_mean_cluster = zeros(img_height, img_width, 'uint8');   % clustered image
 
 cluster_color_counter = 1;
-
-pprob = zeros(3, num_cycles);
 
 for cluster = 1 : num_clusters
     
@@ -101,20 +101,27 @@ for cluster = 1 : num_clusters
 %     Compute the new vector x
     can_do_better = 1;  % loop condition
     for cycle = 1 : num_cycles
-%     while can_do_better        
-        [~, index_max] = max(A * x);    % position of the pure strategy which is a best response
-        r = zeros(n, 1);    % pure strategy r
-        r(index_max) = 1;
+%     while can_do_better      
+        avg_payoffs = A * x;
+        [max_value, ~] = max(avg_payoffs);    % position of the pure strategy which is a best response
+        r = zeros(n, 1);  
+        max_values_counter = 0;
+        for i = 1 : n 
+            curr_val = avg_payoffs(i);
+            if curr_val == max_value
+                r(i) = 1;
+                max_values_counter = max_values_counter + 1;
+            end
+        end
+        r = r / max_values_counter;
+        % r(index_max) = 1;
         % in this way the best strategy is a pure strategy where I play a
         % pure strategy, choosing the play with higher avg payoff. But what
         % if there are many maxima? I would choose only the first one in 
         % the vector order!
-        % I could choose 
+        % I could choose randomly one of the maxima getting the same
+        % payoff!
         y = x + (r - x) / (t + 1);  % new population strategy
-        
-        pprob(1, cycle) = x(1);
-        pprob(2, cycle) = x(4);
-        pprob(3, cycle) = x(8);
         
         t = t + 1;  % increment population
         prev_x = x; % update the "previous" population strategy
