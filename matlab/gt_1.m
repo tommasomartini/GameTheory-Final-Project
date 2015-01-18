@@ -1,4 +1,5 @@
 % Replicator Dynamics
+% Simple example with number matrix
 
 close all;
 clear all;

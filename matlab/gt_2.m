@@ -1,4 +1,5 @@
 % Best Response Dynamics with Fictitious Play
+% Simple example with number matrix
 
 close all;
 clear all;

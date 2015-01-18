@@ -1,4 +1,6 @@
 % Replicator Dynamics
+% 1 cluster, B&W
+% Needs get_payoff.m
 
 close all;
 clear all;

@@ -1,14 +1,14 @@
 % Best Response Dynamics with Fictitious Play
-% Black and white images
-% 1 cluster
+% 1 cluster, B&W
 % needs get_payoff.m
+% end condition: difference between prob vectors
 
 close all;
 clear all;
 clc;
 
 %% Parameters
-img_name = 'tosa.jpg'; % name of the image
+img_name = 'cat.jpg'; % name of the image
 t = 1;  % initial number of individuals in the population
 sigma = 150;    % standard deviation
 delta = 0.001;   % maximum distance between two probs vectors to stop the loop
@@ -20,11 +20,13 @@ thr = 80;  % percentage of the highest probabilities to keep
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
 
-% img = [ 200, 200, 200, 130;
-%         200, 200, 200, 65
-%         200, 200, 200, 65;
-%         65, 65, 65, 65];
-% img = uint8(img);
+img = [ 2, 2, 2, 70, 70, 70;
+        2, 2, 200, 70, 70, 70;
+        200, 200, 200, 200, 200, 70;
+        38, 200, 200, 200, 123, 123;
+        38, 200, 38, 200, 200, 123;
+        38, 38, 38, 200, 249, 249];
+img = uint8(img);
 
 [img_height, img_width] = size(img);
 n = img_width * img_height; % number of pixels
@@ -46,8 +48,8 @@ while can_do_better
     num_cycl = num_cycl + 1;
     
     [~, index_max] = max(A * x);    % position of the pure strategy which is a best response
-    r = zeros(n, 1);    % pure strategy r
-    r(index_max) = 1;
+    r = zeros(n, 1);    % best strategy r...
+    r(index_max) = 1;   % ...is a pure strategy
     y = x + (r - x) / (t + 1);  % new population strategy
     
     t = t + 1;  % increment population
@@ -85,14 +87,14 @@ end
 %% Normalize the probabilities
 min_prob = min(x);  % smallest probability. This will become zero
 x = x - min_prob;
-max_prob = max(x);  % highest probanility. This will become one
+max_prob = max(x);  % highest probability. This will become one
 x = x ./ max_prob;
     
 %% Display cluster
 img_cluster = zeros(img_height, img_width); % in this image we show the cluster
 for i = 1 : n   % for each probability
     if x(i) > 1 - thr/100    % "high" prob of playing this choice
-        % Track back the image pixel
+        % Track back the image pixel (from prob vector cell to image pixel)
         yy = ceil(i / img_width);
         xx = rem(i, img_width);
         if xx == 0

@@ -1,5 +1,6 @@
-% Replicator Dynamics.
-% Color image
+% Replicator Dynamics
+% 1 cluster, color
+% Needs get_payoff_2.m
 
 close all;
 clear all;

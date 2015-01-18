@@ -1,7 +1,7 @@
 % Best Response Dynamics with Fictitious Play
-% Black and white images
-% 1 cluster
+% 1 cluster, B&W
 % needs get_payoff.m
+% end condition: num cycles
 
 close all;
 clear all;

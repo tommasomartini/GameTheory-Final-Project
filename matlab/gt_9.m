@@ -1,6 +1,5 @@
 % Best Response Dynamics with Fictitious Play
-% Black and white images
-% Multiple cluster
+% many clusters, B&W
 % needs get_payoff.m
 
 close all;
@@ -21,10 +20,18 @@ num_clusters = 2;   % number of clusters to find (should be automatically found!
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
 
-img = [ 200, 200, 200, 130;
-        200, 200, 200, 65
-        200, 200, 200, 65;
-        65, 65, 65, 65];
+% img = [ 200, 200, 200, 130;
+%         200, 200, 200, 65
+%         200, 200, 200, 65;
+%         65, 65, 65, 65];
+% img = uint8(img);
+
+img = [ 2, 2, 2, 70, 70, 70;
+        2, 2, 200, 70, 70, 70;
+        200, 200, 200, 200, 200, 70;
+        38, 200, 200, 200, 123, 123;
+        38, 200, 38, 200, 200, 123;
+        38, 38, 38, 200, 249, 249];
 img = uint8(img);
 
 [img_height, img_width] = size(img);

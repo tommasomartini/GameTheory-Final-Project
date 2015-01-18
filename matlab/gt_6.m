@@ -1,5 +1,5 @@
-% Replicator Dynamics for finding multiple clusters
-% Black and white images
+% Replicator Dynamics
+% many clusters, B&W
 % Needs get_payoff.m
 
 close all;
@@ -49,7 +49,7 @@ flags = ones(img_height, img_width);    % '0' pixels are already inside a cluste
 cluster_colors = zeros(1, num_clusters);    % contains the colors of the clusters
 
 x = ones(n, 1) / n; % (uniform) mixed strategy vector
-new_x = ones(n, 1) / n;    % vector used to updte x
+new_x = ones(n, 1) / n;    % vector used to update x
 
 img_mean_cluster = zeros(img_height, img_width, 'uint8');
 
