@@ -1,7 +1,5 @@
 % If the std dev is high:
-%   all the pixels are "similar"
-% otherwise
-%   points are hardly marked as "similar"
+%   all the 
 
 % Image and std dev as input and returns the payoff matrix
 function A = get_payoff(img, sigma)

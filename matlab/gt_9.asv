@@ -106,10 +106,7 @@ for cluster = 1 : num_clusters
         r = zeros(n, 1);    % pure strategy r
         r(index_max) = 1;
         % in this way the best strategy is a pure strategy where I play a
-        % pure strategy, choosing the play with higher avg payoff. But what
-        % if there are many maxima? I would choose only the first one in 
-        % the vector order!
-        % I could choose 
+        % p
         y = x + (r - x) / (t + 1);  % new population strategy
         
         pprob(1, cycle) = x(1);
