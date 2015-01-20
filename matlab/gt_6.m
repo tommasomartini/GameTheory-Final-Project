@@ -7,7 +7,7 @@ clear all;
 clc;
 
 %% Parameters
-sigma = 10000;    % standard deviation
+sigma = 1000000;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
 img_name = 'chess.jpg'; % name of the image
 thr = 20;  % percentage of the highest probabilities to keep

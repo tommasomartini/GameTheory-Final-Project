@@ -48,8 +48,6 @@ new_x = ones(n, 1) / n;    % vector used to update x
 % clustered colored image
 img_mean_cluster = zeros(img_height, img_width, 3, 'uint8');
 
-pixels_to_remove = ones(n, 1);
-
 for cluster = 1 : num_clusters
     
     num_pixel = sum(sum(flags));    % number of non-assiged pixels
@@ -61,12 +59,8 @@ for cluster = 1 : num_clusters
     end
     
     %     ora questo vettore contiene una uniforme tra i pixel rimasti
-%     x = new_x;
-%     new_x = ones(n, 1) / num_pixel;
-
-    x = ones(n, 1) / num_pixel;
-    x = x .* pixels_to_remove;
-
+    x = new_x;
+    new_x = ones(n, 1) / num_pixel;
     %     Vorrei avere tutte le prob a zero, tranne quelle dei pixel non ancora
     %     in un cluster. Ma controllare quali pixel sono gia stati assegnati e
     %     lungo da fare. Tuttavia A ha le righe corrispondenti ai pixel ga
@@ -119,8 +113,7 @@ for cluster = 1 : num_clusters
                 
 %                 row_index = (yy - 1) * img_width + xx;  % find the corresponding row of A
 %                 A(row_index, :) = zeros(1, n);  % payoff 0 playing this pixel in future
-                pixels_to_remove(i) = 0;
-
+                
                 %                 Update the avg color of the cluster
                 mean_cluster_color(1) = mean_cluster_color(1) + x(i) * double(img(yy, xx, 1));
                 mean_cluster_color(2) = mean_cluster_color(2) + x(i) * double(img(yy, xx, 2));

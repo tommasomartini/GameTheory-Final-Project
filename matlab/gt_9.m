@@ -9,10 +9,10 @@ clc;
 %% Parameters
 img_name = 'chess.jpg'; % name of the image
 t = 1;  % initial number of individuals in the population
-sigma = 1;    % standard deviation
+sigma = 150;    % standard deviation
 % delta = 0.01;   % maximum distance between two probs vectors to stop the loop
 num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
-thr = 10;  % percentage of the highest probabilities to keep
+thr = 80;  % percentage of the highest probabilities to keep
 num_clusters = 2;   % number of clusters to find (should be automatically found!)
 
 %% Main body
@@ -42,6 +42,10 @@ img = rgb2gray(img_col);    % ...and bring it in b&w
 %         DD, DD, DD, CC, FF, FF];
 % img = uint8(img);
 
+[img_height, img_width] = size(img);
+n = img_width * img_height; % number of pixels
+
+img = img(1 : img_height / 2, 1 : img_width / 2);
 [img_height, img_width] = size(img);
 n = img_width * img_height; % number of pixels
 
