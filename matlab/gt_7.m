@@ -10,8 +10,8 @@ clc;
 sigma = 150;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
 img_name = 'cat.jpg'; % name of the image
-thr = 80;  % percentage of the highest probabilities to keep
-num_clusters = 5;   % number of clusters to find (should be automatically found!)
+thr = 50;  % percentage of the highest probabilities to keep
+num_clusters = 8;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
@@ -27,7 +27,7 @@ img = img_original;
 
 % Show the original image
 figure;
-imshow(img_original);
+imshow(img_original); title('Original');
 
 % Compute the payoff matrix
 A = get_payoff_2(img_lab, sigma);
@@ -192,4 +192,4 @@ while unassigned_pixels && assign_cycle_counter <= max_num_assign_cycle
 end
 
 figure
-imshow(img_mean_cluster);
+imshow(img_mean_cluster); title('Mean cluster');

@@ -9,8 +9,8 @@ clc;
 %% Parameters
 sigma = 100;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
-img_name = 'cat.jpg'; % name of the image
-thr = 10;  % percentage of the highest probabilities to keep
+img_name = 'chess.jpg'; % name of the image
+thr = 20;  % percentage of the highest probabilities to keep
 
 %%
 img_original = imread(img_name);    % acquire image

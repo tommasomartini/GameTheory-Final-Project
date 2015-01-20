@@ -9,10 +9,10 @@ clc;
 %% Parameters
 img_name = 'chess.jpg'; % name of the image
 t = 1;  % initial number of individuals in the population
-sigma = 150;    % standard deviation
+sigma = 1;    % standard deviation
 % delta = 0.01;   % maximum distance between two probs vectors to stop the loop
 num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
-thr = 80;  % percentage of the highest probabilities to keep
+thr = 10;  % percentage of the highest probabilities to keep
 num_clusters = 2;   % number of clusters to find (should be automatically found!)
 
 %% Main body
