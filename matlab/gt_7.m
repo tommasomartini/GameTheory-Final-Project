@@ -10,6 +10,7 @@ clc;
 sigma = 150;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
 img_name = 'cat.jpg'; % name of the image
+img_name = 'island.png'; % name of the image
 thr = 50;  % percentage of the highest probabilities to keep
 num_clusters = 8;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
@@ -30,7 +31,7 @@ figure;
 imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-A = get_payoff_2(img_lab, sigma);
+A = get_payoff_3(img_lab, sigma);
 
 % Image dimensions
 [img_height, img_width, ~] = size(img);

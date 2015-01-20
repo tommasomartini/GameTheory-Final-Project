@@ -92,10 +92,14 @@ for cluster = 1 : num_clusters
         break;
     end
     
-    x = new_x;
-    % ora questo vettore contiene una uniforme tra i pixel rimasti
-    % now new_x contains a uniform among the remaining pixels
-    new_x = ones(n, 1) / num_pixel;
+%     x = new_x;
+%     % ora questo vettore contiene una uniforme tra i pixel rimasti
+%     % now new_x contains a uniform among the remaining pixels
+%     new_x = ones(n, 1) / num_pixel;
+    
+    x = ones(n, 1) / num_pixel;
+    x = x .* pixels_to_remove;
+    
     %     Vorrei avere tutte le prob a zero, tranne quelle dei pixel non ancora
     %     in un cluster. Ma controllare quali pixel sono gia stati assegnati e
     %     lungo da fare. Tuttavia A ha le righe corrispondenti ai pixel ga
@@ -177,9 +181,10 @@ for cluster = 1 : num_clusters
                 img_cluster(yy, xx) = 255;  % color the pixel
                 mask(yy, xx) = 1;   % fill the mask
                 
-                row_index = (yy - 1) * img_width + xx;  % find the corresponding row of A
-                A(row_index, :) = zeros(1, n);  % payoff 0 playing this pixel in the future
-                
+%                 row_index = (yy - 1) * img_width + xx;  % find the corresponding row of A
+%                 A(row_index, :) = zeros(1, n);  % payoff 0 playing this pixel in the future
+                pixels_to_remove(i) = 0;
+                                
                 mean_cluster_color = mean_cluster_color + x(i) * double(img(yy, xx));
             end
         end
