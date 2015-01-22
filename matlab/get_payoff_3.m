@@ -1,5 +1,5 @@
 % In input riceve l'immagine e restituisce la matrice dei payoff
-function A = get_payoff_2(img, sigma1)
+function A = get_payoff_3(img, sigma1)
     img = double(img);
     [img_h, img_w, ~] = size(img);
     n = img_w * img_h;

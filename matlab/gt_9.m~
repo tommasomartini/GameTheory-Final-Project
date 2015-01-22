@@ -118,8 +118,8 @@ for cluster = 1 : num_clusters
         max_values_counter = 0;
         for i = 1 : n 
             curr_val = avg_payoffs(i);
-%             if curr_val == max_value
-            if abs(curr_val - max_value) < 10^-6
+            if curr_val == max_value
+            if curr_val == max_value
                 r(i) = 1;
                 max_values_counter = max_values_counter + 1;
             end
