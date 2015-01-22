@@ -7,11 +7,11 @@ clear all;
 clc;
 
 %% Parameters
-sigma = 150;    % standard deviation
+sigma = 100;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
 img_name = 'cat.jpg'; % name of the image
 thr = 50;  % percentage of the highest probabilities to keep
-num_clusters = 8;   % number of clusters to find (should be automatically found!)
+num_clusters = 50;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
@@ -151,52 +151,52 @@ end
 % Pixels can be assigned by position or resemblance. Here we assign a pixel
 % according to the membership of its neighborhood.
 
-unassigned_pixels = sum(sum(flags));    % if >=1 there are unassigned pixels and I have to go through the next procedure
-assign_cycle_counter = 1;
-window_size = 0;
-while unassigned_pixels && assign_cycle_counter <= max_num_assign_cycle
-    unassigned_pixels = 0;  % best case: I'll manage to assign all the remaining pixels
-    assign_cycle_counter = assign_cycle_counter + 1;    % update the cycle counter
-    window_size = min(window_size + 1, max_window_size);
-    for i = 1 : img_height  % for each pixel in the image...
-        for j = 1 : img_width
-            if flags(i, j)  % if it is not yet assigned
-                
-                % Assignation by RESEMBLANCE
-                % to do...
-                
-                % Assignation by POSITION
-                color_votes = zeros(1, num_clusters);   % contains the votes for each cluster color
-                for k = max(i - window_size, 1) : min(i + window_size, img_height)  % for each pixel around...
-                    for l = max(j - window_size, 1) : min(j + window_size, img_width)
-                        curr_col = zeros(3, 1); % color of the current surrounding pixel
-                        curr_col(1) = img_mean_cluster(k, l, 1);
-                        curr_col(2) = img_mean_cluster(k, l, 2);
-                        curr_col(3) = img_mean_cluster(k, l, 3);
-                        for m = 1 : length(cluster_colors)  % for each color in the list of cluster colrs...
-                            if sum(curr_col == cluster_colors(:, m)) == 3
-                                color_votes(m) = color_votes(m) + 1;
-                            end
-                        end
-                    end
-                end
-                
-                % If there is at least one voted color among the cluster
-                % colors...
-                if sum(color_votes)
-                    [~, elected_colors] = max(color_votes); % list of the most voted colors
-                    elected_color = cluster_colors(:, elected_colors(1));  % one of the most voted colors
-                    img_mean_cluster(i, j, :) = elected_color;     % assigned that color to the pixel
-                    flags(i, j) = 0;    % remove the pixel from the flags
-                else
-%                     sub_img = img(max(i - window_size, 1) : min(i + window_size, img_height), max(j - window_size, 1) : min(j + window_size, img_width), :);
-%                     figure; imshow(sub_img);
-                    unassigned_pixels = 1;  % repeat the cycle
-                end
-            end
-        end
-    end
-end
+% unassigned_pixels = sum(sum(flags));    % if >=1 there are unassigned pixels and I have to go through the next procedure
+% assign_cycle_counter = 1;
+% window_size = 0;
+% while unassigned_pixels && assign_cycle_counter <= max_num_assign_cycle
+%     unassigned_pixels = 0;  % best case: I'll manage to assign all the remaining pixels
+%     assign_cycle_counter = assign_cycle_counter + 1;    % update the cycle counter
+%     window_size = min(window_size + 1, max_window_size);
+%     for i = 1 : img_height  % for each pixel in the image...
+%         for j = 1 : img_width
+%             if flags(i, j)  % if it is not yet assigned
+%                 
+%                 % Assignation by RESEMBLANCE
+%                 % to do...
+%                 
+%                 % Assignation by POSITION
+%                 color_votes = zeros(1, num_clusters);   % contains the votes for each cluster color
+%                 for k = max(i - window_size, 1) : min(i + window_size, img_height)  % for each pixel around...
+%                     for l = max(j - window_size, 1) : min(j + window_size, img_width)
+%                         curr_col = zeros(3, 1); % color of the current surrounding pixel
+%                         curr_col(1) = img_mean_cluster(k, l, 1);
+%                         curr_col(2) = img_mean_cluster(k, l, 2);
+%                         curr_col(3) = img_mean_cluster(k, l, 3);
+%                         for m = 1 : length(cluster_colors)  % for each color in the list of cluster colrs...
+%                             if sum(curr_col == cluster_colors(:, m)) == 3
+%                                 color_votes(m) = color_votes(m) + 1;
+%                             end
+%                         end
+%                     end
+%                 end
+%                 
+%                 % If there is at least one voted color among the cluster
+%                 % colors...
+%                 if sum(color_votes)
+%                     [~, elected_colors] = max(color_votes); % list of the most voted colors
+%                     elected_color = cluster_colors(:, elected_colors(1));  % one of the most voted colors
+%                     img_mean_cluster(i, j, :) = elected_color;     % assigned that color to the pixel
+%                     flags(i, j) = 0;    % remove the pixel from the flags
+%                 else
+% %                     sub_img = img(max(i - window_size, 1) : min(i + window_size, img_height), max(j - window_size, 1) : min(j + window_size, img_width), :);
+% %                     figure; imshow(sub_img);
+%                     unassigned_pixels = 1;  % repeat the cycle
+%                 end
+%             end
+%         end
+%     end
+% end
 
 figure
 imshow(img_mean_cluster); title('Mean cluster');

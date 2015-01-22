@@ -43,35 +43,23 @@ for cycle = 1 : num_cycles
     
 %     new_BR = new_payoff ./ sum(new_payoff);
 
-    my_payoff = A' * new_BR;
-%     sum_old_payoff = sum(old_payoff);
+    old_payoff = A' * new_BR;
+    sum_old_payoff = sum(old_payoff);
     
-    my_avg_payoff = my_payoff' * x;
-    my_avg_gain = my_payoff - my_avg_payoff;
+    double_vec(:, 1) = old_payoff;
+    double_vec(:, 2) = x;
     
-    sum_avg_gain = sum(my_avg_gain);
-    if sum_avg_gain == 0
-        [max_gain, index_max_gain] = max(my_avg_gain);
-        my_avg_gain(index_max_gain) = max_gain + 0.00001;
-        sum_avg_gain = sum(my_avg_gain);
-    end
+    [max_old_payoff, index_max_old_payoff] = max(old_payoff);
+    [min_old_payoff, index_min_old_payoff] = min(old_payoff);
     
-    new_x = 0.5 * (x + my_avg_gain / sum_avg_gain);
-    
-%     double_vec(:, 1) = old_payoff;
-%     double_vec(:, 2) = x;
-%     
-%     [max_old_payoff, index_max_old_payoff] = max(old_payoff);
-%     [min_old_payoff, index_min_old_payoff] = min(old_payoff);
-%     
 %     updated_probs = old_payoff;
 %     updated_probs(index_max_old_payoff) = updated_probs(index_max_old_payoff) + x(index_min_old_payoff) * (max_old_payoff / (max_old_payoff + min_old_payoff));
 %     updated_probs(index_min_old_payoff) = updated_probs(index_min_old_payoff) - x(index_min_old_payoff) * (max_old_payoff / (max_old_payoff + min_old_payoff));
 
-%     updated_probs = old_payoff ./ sum_old_payoff;
+    updated_probs = old_payoff ./ sum_old_payoff;
     
 
-    x =  new_x;
+    x =  updated_probs;
 %     sum(x)
 end
 
