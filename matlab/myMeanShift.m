@@ -67,10 +67,13 @@ if nargin<1
 elseif nargin == 1 
     hs = 20;
     hr = 32;
+    plotOn = 0;
 elseif nargin == 2
     hr = 32;
+    plotOn = 0;
 elseif nargin == 3
-    th = 1/100; plotOn = 0;
+    th = 1/100; 
+    plotOn = 0;
 elseif nargin == 4
     if th<0 || th >255
         error('threshold should be in [0,255]')
@@ -112,11 +115,12 @@ while ~done
                 spatialKernel = 1;
                 % uncomment the following line to active Gaussian kernel
                 %spatialKernel = exp(-(i^2+j^2)/(hs/3)^2/2);
-                % xThis is the current window
+                % xThis is the current window: it is as large as thev
+                % original img
                 xThis = xPad(height+i : 2*height+i-1, width+j : 2*width+j-1, 1 : depth);
                 xDiffSq = (y-xThis).^2; 
                 % feature kernel weight
-                intensityKernel = repmat( prod( reshape( weight_map( xDiffSq+1 ), height, width, depth) , 3 ), [1,1, depth]);
+                intensityKernel = repmat( prod( reshape( weight_map(xDiffSq+1), height, width, depth), 3 ), [1,1, depth]);
                 % mixed kernel weight
                 weightThis = spatialKernel.*intensityKernel;
                 % update accumulated weights
