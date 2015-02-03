@@ -1,23 +1,35 @@
 % Replicator Dynamics
-% many clusters, color
+% many clusters, color, BIG IMAGES
 % Needs get_payoff_2.m
 
-close all;
+% close all;
 clear all;
 clc;
 
 %% Parameters
 sigma = 100;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster
-img_name = 'cat.jpg'; % name of the image
+img_name = 'parrot.png'; % name of the image
 thr = 50;  % percentage of the highest probabilities to keep
 num_clusters = 50;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
+scaling_factor = 10;
 
 %% Main body
 img_original = imread(img_name);    % acquire image
+
+img_big_original = img_original;
+
+%% Scale down the image
+scaled_img = img_original(1 : scaling_factor : end, 1 : scaling_factor : end, :);
+
+% figure;
+% imshow(uint8(scaled_img));
+
+img_original = scaled_img;
+
 % img_original = img_original(1 : end - 1, 1 : end - 1, :);
 img_original_double = double(img_original); % make a 'double' copy of the image
 % CIELAB is perceptually linear: transform from srgb to lab
@@ -85,7 +97,6 @@ for cluster = 1 : num_clusters
             y(i) = x(i) * (pure_payoffs(i) + C) / (den + C);
         end
         x = y;
-        sum
     end
     
     %% Normalize the probabilities
@@ -201,3 +212,8 @@ end
 
 figure
 imshow(img_mean_cluster); title('Mean cluster');
+
+%% Back to the big image
+
+img_big_cluster = zeros(size(img_big_original));
+img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
