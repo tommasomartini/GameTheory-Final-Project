@@ -2,16 +2,16 @@
 % many clusters, color, BIG IMAGES
 % Needs get_payoff_2.m
 
-% close all;
+close all;
 clear all;
 clc;
 
 %% Parameters
 sigma = 100;    % standard deviation
-num_cycles = 10;   % number of iterations per cluster
+num_cycles = 150;   % number of iterations per cluster
 img_name = 'parrot.png'; % name of the image
-thr = 50;  % percentage of the highest probabilities to keep
-num_clusters = 50;   % number of clusters to find (should be automatically found!)
+thr = 95;  % percentage of the highest probabilities to keep
+num_clusters = 60;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
@@ -20,26 +20,21 @@ scaling_factor = 10;
 %% Main body
 img_original = imread(img_name);    % acquire image
 
-img_big_original = img_original;
+img_big_original = img_original;    % save a copy of the original image
 
 %% Scale down the image
 scaled_img = img_original(1 : scaling_factor : end, 1 : scaling_factor : end, :);
-
-% figure;
-% imshow(uint8(scaled_img));
-
 img_original = scaled_img;
-
-% img_original = img_original(1 : end - 1, 1 : end - 1, :);
 img_original_double = double(img_original); % make a 'double' copy of the image
+
 % CIELAB is perceptually linear: transform from srgb to lab
 colorTransform = makecform('srgb2lab');
 img_lab = applycform(img_original, colorTransform);
 img = img_original;
 
 % Show the original image
-figure;
-imshow(img_original); title('Original');
+% figure;
+% imshow(img_original); title('Original');
 
 % Compute the payoff matrix
 A = get_payoff_2(img_lab, sigma);
@@ -210,8 +205,23 @@ end
 %     end
 % end
 
-figure
-imshow(img_mean_cluster); title('Mean cluster');
+% figure
+% imshow(img_mean_cluster); title('Mean cluster');
+
+img_mean_cluster = double(img_mean_cluster);
+
+R = img_original_double(:, :, 1);
+G = img_original_double(:, :, 2);
+B = img_original_double(:, :, 3);
+Rc = img_mean_cluster(:, :, 1);
+Gc = img_mean_cluster(:, :, 2);
+Bc = img_mean_cluster(:, :, 3);
+figure(1)
+subplot(121), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
+subplot(122), hold on 
+scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
+scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
+title('Pixel distribution after clustering')
 
 %% Back to the big image
 

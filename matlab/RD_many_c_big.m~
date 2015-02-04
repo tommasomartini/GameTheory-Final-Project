@@ -20,12 +20,20 @@ scaling_factor = 10;
 %% Main body
 img_original = imread(img_name);    % acquire image
 
-img_big_original = img_original;
+img_big_original = img_original;    % save a copy of the original image
 
 %% Scale down the image
 scaled_img = img_original(1 : scaling_factor : end, 1 : scaling_factor : end, :);
 
-% figure;
+R = scaled_img(:, :, 1);
+G = scaled_img(:, :, 2);
+B = scaled_img(:, :, 3);
+figure(1)
+subplot(121), imshow(uint8(scaled_img)), axis image; title('input image')
+subplot(122), 
+scatter3( R(:), G(:), B(:), 36, [ R(:), G(:), B(:) ]);
+% scatter3( Rx(:), Gx(:), Bx(:), 30, [ Rx(:), Gx(:), Bx(:) ]/255 );
+title('Pixel Distribution Before clustering')
 % imshow(uint8(scaled_img));
 
 img_original = scaled_img;

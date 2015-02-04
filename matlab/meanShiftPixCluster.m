@@ -79,6 +79,9 @@ elseif nargin == 5
 elseif nargin>5
     error('too many input arguments')
 end
+
+plotOn = 1;
+
 %% initialization
 x = double(x);
 [height,width,depth] = size(x);
@@ -104,7 +107,7 @@ while ~done
                 % spatial kernel weight 
                 spatialKernel = 1;
                 % uncomment the following line to active Gausian kernel
-                %spatialKernel = exp(-(i^2+j^2)/(hs/3)^2/2);
+                spatialKernel = exp(-(i^2+j^2)/(hs/3)^2/2);
                 xThis =  xPad(height+i:2*height+i-1, width+j:2*width+j-1, 1:depth);
                 xDiffSq = (y-xThis).^2;
                 % feature kernel weight
