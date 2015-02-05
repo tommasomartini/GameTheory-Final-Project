@@ -14,13 +14,13 @@ tic
 sigma = 100;    % standard deviation
 % TODO num_cycles should be higher, as 150
 num_cycles = 100;   % number of iterations per cluster
-img_name = 'lion_king.jpg'; % name of the image
+img_name = 'reef.jpg'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
-scaling_factor = 10;
+scaling_factor = 100;
 
 %% Main body
 img_original = imread(img_name);    % acquire image

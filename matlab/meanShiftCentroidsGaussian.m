@@ -70,13 +70,21 @@ while num_centroids_left    % while there are still some centroids
 
     while 1     % loop untill convergence
         
+        sqColorDistToAll = sum((repmat(myMean(1 : 3, :), 1, numPts) - dataPts(1 : 3, :)).^2);
+        sqSpaceDistToAll = sum((repmat(myMean(2 : 2, :), 1, numPts) - dataPts(2 : 4, :)).^2);
+        
         sqDistToAll = sum((repmat(myMean,1,numPts) - dataPts).^2);    % squared distance from mean to all points still active
-%         sqDistToAll = weight_map(ceil(sqDistToAll) + 1);
+%         inInds      = find(sqColorDistToAll < bandSq); 
         inInds      = find(sqDistToAll < bandSq);               % indeces of points whose distance is under the square of the bandwidth 
         thisClusterVotes(inInds) = thisClusterVotes(inInds)+1;  % add a vote for all the in points belonging to this cluster
         
         myOldMean   = myMean;                       % save the old mean
         myMean      = mean(dataPts(:,inInds), 2);   % compute the new mean: mean of the points "close enough"
+             
+%         kerColorDistToAll = exp(-sqColorDistToAll ./ hr^2);
+%         kerSpaceDistToAll = exp(-sqSpaceDistToAll ./ hs^2);
+%         totalKernel = kerColorDistToAll .* kerSpaceDistToAll;
+        
         myMembers   = [myMembers inInds];           % add all the points within bandWidth to the cluster
         beenVisitedFlag(myMembers) = 1;             % mark that these points have been visited
         
@@ -159,8 +167,14 @@ while numInitPts    % while there are still some initPts
     thisClusterVotes    = zeros(1,numPts,'uint16');     % used to resolve conflicts on cluster membership
 
     while 1     % loop untill convergence
-        
+        sqColorDistToAll = sum((repmat(myMean(1 : 3, :), 1, numPts) - dataPts(1 : 3, :)).^2);
+        sqSpaceDistToAll = sum((repmat(myMean(2 : 2, :), 1, numPts) - dataPts(2 : 4, :)).^2);
+        kerColorDistToAll = exp(-sqColorDistToAll ./ hr^2);
+        kerSpaceDistToAll = exp(-sqSpaceDistToAll ./ hs^2);
+        totalKernel = kerColorDistToAll .* kerSpaceDistToAll;
+         
         sqDistToAll = sum((repmat(myMean,1,numPts) - dataPts).^2);    % squared distance from mean to all points still active
+        % inInds      = find(totalKernel < bandSq);
         inInds      = find(sqDistToAll < bandSq);               % indeces of points whose distance is under the square of the bandwidth 
         thisClusterVotes(inInds) = thisClusterVotes(inInds)+1;  % add a vote for all the in points belonging to this cluster
         
