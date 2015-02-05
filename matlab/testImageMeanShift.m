@@ -2,8 +2,10 @@ clear all
 close all
 clc
 
-x = double( imread('win2.jpg') );
+x = double( imread('parrot.png') );
+tic
 y = meanShiftPixCluster(x, 20, 20);
+toc
 
 sample = zeros(size(x,1),size(x,2));
 sample(1:3:end,1:3:end) = 1;
