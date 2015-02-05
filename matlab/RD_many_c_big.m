@@ -11,7 +11,7 @@ clc;
 %% Parameters
 sigma = 100;    % standard deviation
 % TODO num_cycles should be higher, as 150
-num_cycles = 200;   % number of iterations per cluster
+num_cycles = 20;   % number of iterations per cluster
 img_name = 'parrot.png'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)

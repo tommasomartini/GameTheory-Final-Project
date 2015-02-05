@@ -49,7 +49,6 @@ pause on;
 
 num_centroids_left = num_centroids; % how many centroids I don't have yet used
 centroids_left = centroids;
-centroids_indeces = 1 : num_centroids;
 centroid_counter = 0;
 while num_centroids_left    % while there are still some centroids
 
@@ -128,14 +127,113 @@ while num_centroids_left    % while there are still some centroids
     
     centroids_left = centroids_left(:, 2 : end);
     num_centroids_left = num_centroids_left - 1;
-%     centroids_left = find(:, 1 : );   % we can initialize with any of the points not yet visited
-%     numInitPts      = length(initPtInds);           % number of active points in set
+    
+    initPtInds      = find(beenVisitedFlag == 0);   % we can initialize with any of the points not yet visited
+    numInitPts      = length(initPtInds);           % number of active points in set
+end
+
+
+
+
+
+
+
+
+
+
+while numInitPts    % while there are still some initPts
+
+    % rand is a double in the open interval (0, 1). 
+    % The vector initPointInds contains the indeces of the data points not
+    % yet visited. A point has been visited if it has given its
+    % contribution to evaluating a mean
+    tempInd         = ceil((numInitPts - 1e-6) * rand); % pick a random index between 1 and numInitPoints
+    stInd           = initPtInds(tempInd);              % pick the corresponding index
+    myMean          = dataPts(:, stInd);                % intialize mean to this point's location
+    myMembers       = [];                               % points that will get added to this cluster                          
+    thisClusterVotes    = zeros(1,numPts,'uint16');     % used to resolve conflicts on cluster membership
+
+    while 1     % loop untill convergence
+        
+        sqDistToAll = sum((repmat(myMean,1,numPts) - dataPts).^2);    % squared distance from mean to all points still active
+        inInds      = find(sqDistToAll < bandSq);               % indeces of points whose distance is under the square of the bandwidth 
+        thisClusterVotes(inInds) = thisClusterVotes(inInds)+1;  % add a vote for all the in points belonging to this cluster
+        
+        myOldMean   = myMean;                       % save the old mean
+        myMean      = mean(dataPts(:,inInds), 2);   % compute the new mean: mean of the points "close enough"
+        myMembers   = [myMembers inInds];           % add all the points within bandWidth to the cluster
+        beenVisitedFlag(myMembers) = 1;             % mark that these points have been visited
+        
+        if plotOn
+            figure(112),clf,hold on
+            if numDim == 2
+                plot(dataPts(1,:),dataPts(2,:),'.')
+                plot(dataPts(1,myMembers),dataPts(2,myMembers),'ys')
+                plot(myMean(1),myMean(2),'go')
+                plot(myOldMean(1),myOldMean(2),'rd')
+                pause(0.1);
+            elseif numDim == 3
+                scatter3(dataPts(1,:),dataPts(2,:),dataPts(3,:),'.')
+                scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers),'ys')
+                scatter3(myMean(1),myMean(2),myMean(3),'go')
+                scatter3(myOldMean(1),myOldMean(2),myOldMean(3),'rd')
+                view(40,35)
+                pause(0.1);
+            end
+        end
+
+        if norm(myMean - myOldMean) < stopThresh    % mean does not move much
+            
+            %check for merge possibilities
+            mergeWith = 0;  % index of the cluster to merge with
+            for cN = 1 : numClust   % for each found cluster
+                distToOther = norm(myMean - clustCent(:,cN));   % distance between the current mean and the center of the cluster
+                if distToOther < bandWidth/2                    % if its within bandwidth/2 merge new and old
+                    mergeWith = cN;
+                    % if I find a cluster I can merge with, I keep that one
+                    % and will not look for any other. The first one I find
+                    % is OK!
+                    break;
+                end
+            end
+            
+            
+            if mergeWith > 0    % something to merge
+                clustCent(:,mergeWith)       = 0.5*(myMean+clustCent(:,mergeWith));             % the new center of the cluster I merge with is the mean between its center and the current mean
+%                 clustMembsCell{mergeWith}    = unique([clustMembsCell{mergeWith} myMembers]);   % record which points inside 
+                clusterVotes(mergeWith, :)   = clusterVotes(mergeWith,:) + thisClusterVotes;    % add these votes to the merged cluster
+            else    % it is a new cluster
+                numClust                    = numClust + 1;         % increment the number of clusters
+                clustCent(:, numClust)      = myMean;              % record the mean as the center of this new cluster
+                %clustMembsCell{numClust}    = myMembers;                    %store my members
+                clusterVotes(numClust, :)   = thisClusterVotes;
+            end
+
+            break;
+        end
+
+    end
+    
+    initPtInds      = find(beenVisitedFlag == 0);   % we can initialize with any of the points not yet visited
+    numInitPts      = length(initPtInds);           % number of active points in set
 
 end
 
+
+
+
+
+
+
+
+
+
+
+
 % clusterVotes is a matrix with n_rows = n_data_points and n_cols =
 % n_clusters. Every data point votes for one or more cluster
-[~,data2cluster] = max(clusterVotes,[],1);    % a point belongs to the cluster with the most votes
+% [~,data2cluster] = max(clusterVotes,[],1);    % a point belongs to the cluster with the most votes
+[~,data2cluster] = max(clusterVotes,[],1);
 
 %% Output
 % If they want the cluster2data cell find it for them
