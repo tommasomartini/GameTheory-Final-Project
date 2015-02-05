@@ -73,27 +73,14 @@ for cycle = 1 : num_cycles
     neg_gains_ind = find(my_avg_gain < 0);
     
     sum_pos = sum(my_avg_gain(pos_gains_ind));
-    sum_neg = -sum(my_avg_gain(neg_gains_ind));
+    sum_neg = sum(my_avg_gain(neg_gains_ind));
     
-    ffac = 10;
+    ffac = 5;
     
     pos_increments = my_avg_gain(pos_gains_ind) ./ (ffac * sum_pos);
-    neg_increments = my_avg_gain(neg_gains_ind) ./ (ffac * sum_neg);
-    
-%     sum(pos_increments) + sum(neg_increments)
-    
-    new_x = x;
-    new_x(pos_gains_ind) = new_x(pos_gains_ind) + pos_increments;
-    new_x(neg_gains_ind) = new_x(neg_gains_ind) + neg_increments;
-    
-    min_new_x = min(new_x);
-    if min_new_x < 0
-        new_x = new_x - min_new_x;
-        new_x = new_x ./ sum(new_x);
-    end
     
     x =  new_x;
-    sum(x)
+%     sum(x)
 end
 
 % sum(x)

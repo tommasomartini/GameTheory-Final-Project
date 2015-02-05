@@ -14,13 +14,13 @@ tic
 sigma = 100;    % standard deviation
 % TODO num_cycles should be higher, as 150
 num_cycles = 100;   % number of iterations per cluster
-img_name = 'reef.jpg'; % name of the image
+img_name = 'carib_fish.jpg'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
-scaling_factor = 100;
+scaling_factor = 10;
 
 %% Main body
 img_original = imread(img_name);    % acquire image
@@ -41,7 +41,7 @@ img = img_original;
 % imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-A = get_payoff_int_sp(img_lab, 1000000, 10);
+A = get_payoff_int_sp(img_lab, 200, 100);
 % save('reef_matrix', 'A');
 % load parrot_matrix.mat;
 
@@ -164,6 +164,9 @@ end
 
 cluster_colors = cluster_colors(:, 2 : end);
 
+disp('Number of clusters: ');
+disp(size(cluster_colors, 2));
+
 %% Assign the remaining pixels
 % Pixels can be assigned by position or resemblance. Here we assign a pixel
 % according to the membership of its neighborhood.
@@ -242,8 +245,8 @@ dataPts = dataPts';
 centroids = cluster_colors;
 % centroids = 0;
 % tic
-[clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 10, 10, 0);
-% [clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 0);
+% [clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 10, 10, 0);
+[clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 60, 0);
 % toc
 
 figure(222),clf,hold on

@@ -103,7 +103,8 @@ while num_centroids_left    % while there are still some centroids
             mergeWith = 0;  % index of the cluster to merge with
             for cN = 1 : numClust   % for each found cluster
                 distToOther = norm(myMean - clustCent(:,cN));   % distance between the current mean and the center of the cluster
-                if distToOther < bandWidth/2                    % if its within bandwidth/2 merge new and old
+%                 if distToOther < bandWidth/2                    % if its within bandwidth/2 merge new and old
+                if distToOther < 50
                     mergeWith = cN;
                     % if I find a cluster I can merge with, I keep that one
                     % and will not look for any other. The first one I find
@@ -114,9 +115,12 @@ while num_centroids_left    % while there are still some centroids
             
             
             if mergeWith > 0    % something to merge
-                clustCent(:,mergeWith)       = 0.5*(myMean+clustCent(:,mergeWith));             % the new center of the cluster I merge with is the mean between its center and the current mean
+                totalVotes = sum(clusterVotes(mergeWith,:)) + sum(thisClusterVotes);
+                alpha = sum(thisClusterVotes) / totalVotes;
+                beta = sum(clusterVotes(mergeWith,:)) / totalVotes;
+                clustCent(:,mergeWith)  = alpha * myMean + beta * clustCent(:,mergeWith);             % the new center of the cluster I merge with is the mean between its center and the current mean
 %                 clustMembsCell{mergeWith}    = unique([clustMembsCell{mergeWith} myMembers]);   % record which points inside 
-                clusterVotes(mergeWith, :)   = clusterVotes(mergeWith,:) + thisClusterVotes;    % add these votes to the merged cluster
+                clusterVotes(mergeWith, :) = clusterVotes(mergeWith,:) + thisClusterVotes;    % add these votes to the merged cluster
             else    % it is a new cluster
                 numClust                    = numClust + 1;         % increment the number of clusters
                 clustCent(:, numClust)      = myMean;              % record the mean as the center of this new cluster
@@ -136,13 +140,23 @@ while num_centroids_left    % while there are still some centroids
     numInitPts      = length(initPtInds);           % number of active points in set
 end
 
+%% for debugging only
+% clusterVotesCopy = [zeros(1, size(clusterVotes, 2)) ; clusterVotes];
+% [~,data2cluster] = max(clusterVotesCopy,[],1);
+% output_row = zeros(3, length(dataPts));
+% for i = 1 : length(dataPts)
+%     rel_cluster = data2cluster(i) - 1;
+%     if rel_cluster ~= 0
+%         output_row(:, i) = clustCent(:, rel_cluster);
+%     end
+% end
+% kk = reshape(output_row', 300, 400, 3);
+% figure(33)
+% imshow(uint8(kk))
+% %%
 
 
-
-
-
-
-bandWidth = bandWidth * 3;
+bandWidth = 10;
 bandSq = bandWidth^2;  
 
 while numInitPts    % while there are still some initPts
@@ -192,7 +206,8 @@ while numInitPts    % while there are still some initPts
             mergeWith = 0;  % index of the cluster to merge with
             for cN = 1 : numClust   % for each found cluster
                 distToOther = norm(myMean - clustCent(:,cN));   % distance between the current mean and the center of the cluster
-                if distToOther < bandWidth/2                    % if its within bandwidth/2 merge new and old
+                if distToOther < 50
+%                 if distToOther < bandWidth/2                    % if its within bandwidth/2 merge new and old
                     mergeWith = cN;
                     % if I find a cluster I can merge with, I keep that one
                     % and will not look for any other. The first one I find
@@ -203,9 +218,12 @@ while numInitPts    % while there are still some initPts
             
             
             if mergeWith > 0    % something to merge
-                clustCent(:,mergeWith)       = 0.5*(myMean+clustCent(:,mergeWith));             % the new center of the cluster I merge with is the mean between its center and the current mean
+                totalVotes = sum(clusterVotes(mergeWith,:)) + sum(thisClusterVotes);
+                alpha = sum(thisClusterVotes) / totalVotes;
+                beta = sum(clusterVotes(mergeWith,:)) / totalVotes;
+                clustCent(:,mergeWith)  = alpha * myMean + beta * clustCent(:,mergeWith);             % the new center of the cluster I merge with is the mean between its center and the current mean
 %                 clustMembsCell{mergeWith}    = unique([clustMembsCell{mergeWith} myMembers]);   % record which points inside 
-                clusterVotes(mergeWith, :)   = clusterVotes(mergeWith,:) + thisClusterVotes;    % add these votes to the merged cluster
+                clusterVotes(mergeWith, :) = clusterVotes(mergeWith,:) + thisClusterVotes;    % add these votes to the merged cluster
             else    % it is a new cluster
                 numClust                    = numClust + 1;         % increment the number of clusters
                 clustCent(:, numClust)      = myMean;              % record the mean as the center of this new cluster
@@ -222,9 +240,6 @@ while numInitPts    % while there are still some initPts
     numInitPts      = length(initPtInds);           % number of active points in set
 
 end
-
-
-
 
 
 

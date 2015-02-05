@@ -78,12 +78,13 @@ while num_centroids_left    % while there are still some centroids
         inInds      = find(sqDistToAll < bandSq);               % indeces of points whose distance is under the square of the bandwidth 
         thisClusterVotes(inInds) = thisClusterVotes(inInds)+1;  % add a vote for all the in points belonging to this cluster
         
-        myOldMean   = myMean;                       % save the old mean
-        myMean      = mean(dataPts(:,inInds), 2);   % compute the new mean: mean of the points "close enough"
-             
 %         kerColorDistToAll = exp(-sqColorDistToAll ./ hr^2);
 %         kerSpaceDistToAll = exp(-sqSpaceDistToAll ./ hs^2);
 %         totalKernel = kerColorDistToAll .* kerSpaceDistToAll;
+        
+        myOldMean   = myMean;                       % save the old mean
+        tmpWeightedPts = 
+        myMean      = mean(dataPts(:,inInds), 2);   % compute the new mean: mean of the points "close enough"
         
         myMembers   = [myMembers inInds];           % add all the points within bandWidth to the cluster
         beenVisitedFlag(myMembers) = 1;             % mark that these points have been visited
