@@ -2,16 +2,19 @@
 % many clusters, color, BIG IMAGES
 % Needs get_payoff_2.m
 
+%       TODO
+
 close all;
 clear all;
 clc;
 
 %% Parameters
 sigma = 100;    % standard deviation
-num_cycles = 150;   % number of iterations per cluster
+% TODO num_cycles should be higher, as 150
+num_cycles = 200;   % number of iterations per cluster
 img_name = 'parrot.png'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
-num_clusters = 60;   % number of clusters to find (should be automatically found!)
+num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
 max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
 max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
@@ -19,7 +22,6 @@ scaling_factor = 10;
 
 %% Main body
 img_original = imread(img_name);    % acquire image
-
 img_big_original = img_original;    % save a copy of the original image
 
 %% Scale down the image
@@ -37,7 +39,9 @@ img = img_original;
 % imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-A = get_payoff_2(img_lab, sigma);
+% A = get_payoff_2(img_lab, sigma);
+% save('parrot_matrix', 'A');
+load parrot_matrix.mat;
 
 % Image dimensions
 [img_height, img_width, ~] = size(img);
@@ -45,6 +49,7 @@ n = img_width * img_height;
 
 flags = ones(img_height, img_width);    % '0' pixels are already inside a cluster
 cluster_colors = zeros(3, num_clusters);    % contains the colors of the clusters
+cluster_colors = zeros(3, 1);    % contains the colors of the clusters
 cluster_color_counter = 1;  % to browse the cluster color list.
 % In the end cluster_color_counter - 1 will be the number of clusters
 % actually detected
@@ -141,7 +146,8 @@ for cluster = 1 : num_clusters
     flags = flags - mask;
     
     mean_cluster_color = uint8(mean_cluster_color / sum_high_probs);    % avg cluster color
-    cluster_colors(:, cluster_color_counter) = mean_cluster_color; % save it in the list of colors
+%     cluster_colors(:, cluster_color_counter) = mean_cluster_color; % save it in the list of colors
+    cluster_colors = [cluster_colors, mean_cluster_color]; % save it in the list of colors
     cluster_color_counter = cluster_color_counter + 1;  % update index to color list
     
     %     Update the clustered image
@@ -153,6 +159,8 @@ for cluster = 1 : num_clusters
 %     figure
 %     imshow(img_cluster)
 end
+
+cluster_colors = cluster_colors(:, 2 : end);
 
 %% Assign the remaining pixels
 % Pixels can be assigned by position or resemblance. Here we assign a pixel
@@ -217,13 +225,43 @@ Rc = img_mean_cluster(:, :, 1);
 Gc = img_mean_cluster(:, :, 2);
 Bc = img_mean_cluster(:, :, 3);
 figure(1)
-subplot(121), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
-subplot(122), hold on 
+subplot(221), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
+subplot(222), hold on 
 scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
 scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
+view(35, 40);
 title('Pixel distribution after clustering')
+subplot(223), imshow(scaled_img), axis image; title('Original scaled image')
 
 %% Back to the big image
+% I have to pass the img as a row of triples
+dataPts = reshape(img_big_original(:), size(img_big_original, 1) * size(img_big_original, 2), 3);
+dataPts = dataPts';
+centroids = cluster_colors;
+[clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 10, 0);
 
-img_big_cluster = zeros(size(img_big_original));
-img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
+figure(222),clf,hold on
+for k = 1 : size(clustCent, 2)
+    myMembers = clustMembsCell{k};
+    myClustCen = clustCent(:, k);
+%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers))
+%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers), 10, repmat([dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers)], size(myMembers, 2), 1), '.')
+    scatter3(myClustCen(1),myClustCen(2),myClustCen(3), 80, [myClustCen(1),myClustCen(2),myClustCen(3)] / 255, 'o', 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k')
+    view(40,35)
+end
+title(['Pixel space. Number of clusters: ', num2str(size(clustCent, 2))])
+
+% img_big_cluster = zeros(size(img_big_original));
+output_row = zeros(3, length(dataPts));
+for i = 1 : length(dataPts)
+    rel_cluster = point2cluster(i);
+    output_row(:, i) = clustCent(:, rel_cluster);
+end
+
+kk = reshape(output_row', size(img_big_original, 1), size(img_big_original, 2), 3);
+
+figure(333)
+imshow(uint8(kk))
+
+% img_big_cluster = zeros(size(img_big_original));
+% img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
