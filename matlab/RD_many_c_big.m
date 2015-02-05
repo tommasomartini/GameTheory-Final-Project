@@ -14,7 +14,7 @@ tic
 sigma = 100;    % standard deviation
 % TODO num_cycles should be higher, as 150
 num_cycles = 100;   % number of iterations per cluster
-img_name = 'tirol.jpg'; % name of the image
+img_name = 'lion_king.jpg'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
@@ -41,7 +41,7 @@ img = img_original;
 % imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-A = get_payoff_2(img_lab, sigma);
+A = get_payoff_int_sp(img_lab, 1000000, 10);
 % save('reef_matrix', 'A');
 % load parrot_matrix.mat;
 
@@ -242,7 +242,8 @@ dataPts = dataPts';
 centroids = cluster_colors;
 % centroids = 0;
 % tic
-[clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 10, 0);
+[clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 10, 10, 0);
+% [clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 0);
 % toc
 
 figure(222),clf,hold on
