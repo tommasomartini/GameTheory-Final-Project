@@ -8,11 +8,13 @@ close all;
 clear all;
 clc;
 
+tic
+
 %% Parameters
 sigma = 100;    % standard deviation
 % TODO num_cycles should be higher, as 150
-num_cycles = 20;   % number of iterations per cluster
-img_name = 'parrot.png'; % name of the image
+num_cycles = 100;   % number of iterations per cluster
+img_name = 'tirol.jpg'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
@@ -39,9 +41,9 @@ img = img_original;
 % imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-% A = get_payoff_2(img_lab, sigma);
-% save('parrot_matrix', 'A');
-load parrot_matrix.mat;
+A = get_payoff_2(img_lab, sigma);
+% save('reef_matrix', 'A');
+% load parrot_matrix.mat;
 
 % Image dimensions
 [img_height, img_width, ~] = size(img);
@@ -224,21 +226,24 @@ B = img_original_double(:, :, 3);
 Rc = img_mean_cluster(:, :, 1);
 Gc = img_mean_cluster(:, :, 2);
 Bc = img_mean_cluster(:, :, 3);
-figure(1)
-subplot(221), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
-subplot(222), hold on 
-scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
-scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
-view(35, 40);
-title('Pixel distribution after clustering')
-subplot(223), imshow(scaled_img), axis image; title('Original scaled image')
+figure(111)
+% subplot(122), hold on 
+% scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
+% scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
+% view(35, 40);
+% title('Pixel distribution after clustering')
+subplot(121), imshow(scaled_img), axis image; title('Original scaled image')
+subplot(122), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
 
 %% Back to the big image
 % I have to pass the img as a row of triples
 dataPts = reshape(img_big_original(:), size(img_big_original, 1) * size(img_big_original, 2), 3);
 dataPts = dataPts';
 centroids = cluster_colors;
+% centroids = 0;
+% tic
 [clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 10, 0);
+% toc
 
 figure(222),clf,hold on
 for k = 1 : size(clustCent, 2)
@@ -265,3 +270,5 @@ imshow(uint8(kk))
 
 % img_big_cluster = zeros(size(img_big_original));
 % img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
+
+toc

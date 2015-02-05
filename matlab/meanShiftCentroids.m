@@ -42,7 +42,11 @@ clustCent       = [];                       % centers of the clusters
 beenVisitedFlag = zeros(1,numPts,'uint8');  % tracks if a point has been already seen
 clusterVotes    = zeros(1,numPts,'uint16'); % used to resolve conflicts on cluster membership
 
-num_centroids   = size(centroids, 2);       % number of centroids provided
+if centroids == 0
+    num_centroids = 0;
+else
+    num_centroids   = size(centroids, 2);       % number of centroids provided
+end
 
 pause on;
 %% Main cycle
@@ -138,8 +142,8 @@ end
 
 
 
-
-
+bandWidth = bandWidth * 3;
+bandSq = bandWidth^2;  
 
 while numInitPts    % while there are still some initPts
 
