@@ -13,63 +13,21 @@ t = 5;  % initial number of individuals in the population
 sigma = 150;    % standard deviation
 % delta = 0.01;   % maximum distance between two probs vectors to stop the loop
 num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
-thr = 80;  % percentage of the highest probabilities to keep
-num_clusters = 2;   % number of clusters to find (should be automatically found!)
+thr = 20;  % percentage of the highest probabilities to keep
+num_clusters = 3;   % number of clusters to find (should be automatically found!)
 
 %% Main body
 
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
 
-% img = img(1 : 20, 1 : 20);
-
-% img = [ 200, 200, 200, 130;
-%         200, 200, 200, 65
-%         200, 200, 200, 65;
-%         65, 65, 65, 65];
-% img = uint8(img);
-
-% AA = 0;
-% BB = 32;
-% CC = 255;
-% DD = 192;
-% EE = 224;
-% FF = 112;
-% img = [ AA, AA, AA, BB, BB, BB;
-%         AA, AA, CC, BB, BB, BB;
-%         CC, CC, CC, CC, CC, BB;
-%         DD, CC, CC, CC, EE, EE;
-%         DD, CC, DD, CC, CC, EE;
-%         DD, DD, DD, CC, FF, FF];
-% img = uint8(img);
-
 [img_height, img_width] = size(img);
 n = img_width * img_height; % number of pixels
-
-% img = img(1 : img_height / 2, 1 : img_width / 2);
-% [img_height, img_width] = size(img);
-% n = img_width * img_height; % number of pixels
-
-% just for debugging: try to get a 0-1 image (only 2 color levels)
-% for i = 1 : img_width
-%     for j = 1 : img_height
-%         if img(j, i) >= 127
-%             img(j, i) = 220;
-%         else
-%             img(j, i) = 80;
-%         end
-%     end
-% end
 
 % Show the original image
 figure; imshow(img); title('Original');
 
 A = get_payoff(img, sigma); % compute the payoff matrix
-
-% idea: qundo tolgo un pixel dall'immagine perche gia dentro un cluster,
-% non voglio piu sceglierlo nelle prossime giocate: metto la riga
-% corrsipondente della matrice a tutti -1 cosi non lo scgliero  mai e e
-% probabilita si redisribuiranno tra i restanti pixel.
 
 flags = ones(img_height, img_width);    % '0' pixels are already inside a cluster
 cluster_colors = zeros(1, num_clusters);    % contains the colors of the clusters. Needed to assign left pixels
@@ -102,13 +60,7 @@ for cluster = 1 : num_clusters
     
     x = ones(n, 1) / num_pixel;
     x = x .* pixels_to_remove;
-    
-    %     Vorrei avere tutte le prob a zero, tranne quelle dei pixel non ancora
-    %     in un cluster. Ma controllare quali pixel sono gia stati assegnati e
-    %     lungo da fare. Tuttavia A ha le righe corrispondenti ai pixel ga
-    %     presi tutte nulle. Nella moltiplicazione A*x e' come se la prob fosse
-    %     zero, perche tanto la moltiplicazione da sempre zero!
-    
+
     %     Compute the new vector x
     can_do_better = 1;  % loop condition
     for cycle = 1 : num_cycles
@@ -154,7 +106,7 @@ for cluster = 1 : num_clusters
         sum_pos = sum(my_avg_gain(pos_gains_ind));
         sum_neg = -sum(my_avg_gain(neg_gains_ind));
         
-        ffac = 10;
+        ffac = 100;
         
         pos_increments = my_avg_gain(pos_gains_ind) ./ (ffac * sum_pos);
         neg_increments = my_avg_gain(neg_gains_ind) ./ (ffac * sum_neg);

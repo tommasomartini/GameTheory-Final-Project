@@ -8,12 +8,11 @@ clear all;
 clc;
 
 %% Parameters
-img_name = 'cat.jpg'; % name of the image
-t = 5;  % initial number of individuals in the population
-sigma = 150;    % standard deviation
-% delta = 0.01;   % maximum distance between two probs vectors to stop the loop
-num_cycles = 100;   % number of iterations per cluster (should be automatically found!)
+img_name = 'win2.jpg'; % name of the image
+sigma = 50;    % standard deviation
+num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
 thr = 20;  % percentage of the highest probabilities to keep
+redistribution_factor = 100;
 num_clusters = 3;   % number of clusters to find (should be automatically found!)
 
 %% Main body
@@ -21,104 +20,52 @@ num_clusters = 3;   % number of clusters to find (should be automatically found!
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
 
-% img = img(1 : 20, 1 : 20);
-
-% img = [ 200, 200, 200, 130;
-%         200, 200, 200, 65
-%         200, 200, 200, 65;
-%         65, 65, 65, 65];
-% img = uint8(img);
-
-% AA = 0;
-% BB = 32;
-% CC = 255;
-% DD = 192;
-% EE = 224;
-% FF = 112;
-% img = [ AA, AA, AA, BB, BB, BB;
-%         AA, AA, CC, BB, BB, BB;
-%         CC, CC, CC, CC, CC, BB;
-%         DD, CC, CC, CC, EE, EE;
-%         DD, CC, DD, CC, CC, EE;
-%         DD, DD, DD, CC, FF, FF];
-% img = uint8(img);
+scaling_factor = 2;
+img = img(1 : scaling_factor : end, 1 : scaling_factor : end);
 
 [img_height, img_width] = size(img);
 n = img_width * img_height; % number of pixels
-
-% img = img(1 : img_height / 2, 1 : img_width / 2);
-% [img_height, img_width] = size(img);
-% n = img_width * img_height; % number of pixels
-
-% just for debugging: try to get a 0-1 image (only 2 color levels)
-% for i = 1 : img_width
-%     for j = 1 : img_height
-%         if img(j, i) >= 127
-%             img(j, i) = 220;
-%         else
-%             img(j, i) = 80;
-%         end
-%     end
-% end
 
 % Show the original image
 figure; imshow(img); title('Original');
 
 A = get_payoff(img, sigma); % compute the payoff matrix
 
-% idea: qundo tolgo un pixel dall'immagine perche gia dentro un cluster,
-% non voglio piu sceglierlo nelle prossime giocate: metto la riga
-% corrsipondente della matrice a tutti -1 cosi non lo scgliero  mai e e
-% probabilita si redisribuiranno tra i restanti pixel.
-
 flags = ones(img_height, img_width);    % '0' pixels are already inside a cluster
-cluster_colors = zeros(1, num_clusters);    % contains the colors of the clusters. Needed to assign left pixels
+cluster_colors = 0;    % contains the colors of the clusters. Needed to assign left pixels
 
 % Probability vector. Initially set to a uniform distribution
 x = ones(n, 1) / n;
-prev_x = zeros(n, 1);   % previous x vector
-new_x = ones(n, 1) / n; % vector used to update x
 
 img_mean_cluster = zeros(img_height, img_width, 'uint8');   % clustered image
 
 cluster_color_counter = 1;
-
 pixels_to_remove = ones(n, 1);
 
 for cluster = 1 : num_clusters
     
     num_pixel = sum(sum(flags));    % number of non-assiged pixels
     
-    %     If less than 2 pixels are left it does not make any sense to keep on
-    %     clustering the image
+    % If less than 2 pixels are left it does not make any sense to keep on
+    % clustering the image
     if num_pixel < 2
         break;
     end
     
-    %     x = new_x;
-    %     % ora questo vettore contiene una uniforme tra i pixel rimasti
-    %     % now new_x contains a uniform among the remaining pixels
-    %     new_x = ones(n, 1) / num_pixel;
-    
     x = ones(n, 1) / num_pixel;
     x = x .* pixels_to_remove;
 
-    %     Compute the new vector x
+    % Compute the new vector x
     can_do_better = 1;  % loop condition
     for cycle = 1 : num_cycles
         opponent_payoff = A * x;
         
-        %     In this way I wll never play the same pixel!
-        %     I am changing every time! Not suitable!
         max_val = max(opponent_payoff);
         opponent_BR = zeros(n, 1);
         opponent_BR(opponent_payoff == max_val) = 1;
         opponent_BR = opponent_BR ./ sum(opponent_BR);  % BR sums to one in case of multiple best responses
         
-        %     new_BR = new_payoff ./ sum(new_payoff);
-        
         my_payoff = A' * opponent_BR;
-        %     sum_old_payoff = sum(old_payoff);
         
         my_avg_payoff = my_payoff' * x;
         my_avg_gain = my_payoff - my_avg_payoff;
@@ -148,10 +95,8 @@ for cluster = 1 : num_clusters
         sum_pos = sum(my_avg_gain(pos_gains_ind));
         sum_neg = -sum(my_avg_gain(neg_gains_ind));
         
-        ffac = 100;
-        
-        pos_increments = my_avg_gain(pos_gains_ind) ./ (ffac * sum_pos);
-        neg_increments = my_avg_gain(neg_gains_ind) ./ (ffac * sum_neg);
+        pos_increments = my_avg_gain(pos_gains_ind) ./ (redistribution_factor * sum_pos);
+        neg_increments = my_avg_gain(neg_gains_ind) ./ (redistribution_factor * sum_neg);
         
         %     sum(pos_increments) + sum(neg_increments)
         
@@ -166,7 +111,7 @@ for cluster = 1 : num_clusters
         end
         
         x =  new_x;
-        sum(x)
+%         sum(x)
     end
     
     %% Normalize the probabilities
@@ -197,8 +142,6 @@ for cluster = 1 : num_clusters
                 img_cluster(yy, xx) = 255;  % color the pixel
                 mask(yy, xx) = 1;   % fill the mask
                 
-                %                 row_index = (yy - 1) * img_width + xx;  % find the corresponding row of A
-                %                 A(row_index, :) = zeros(1, n);  % payoff 0 playing this pixel in the future
                 pixels_to_remove(i) = 0;
                 
                 mean_cluster_color = mean_cluster_color + x(i) * double(img(yy, xx));
@@ -209,7 +152,7 @@ for cluster = 1 : num_clusters
     flags = flags - mask;   % update flags matrix usin the mask
     
     mean_cluster_color = uint8(mean_cluster_color / sum_high_probs);    % avg color of the current cluster
-    cluster_colors(1, cluster_color_counter) = mean_cluster_color;  % save this avg cluster color
+    cluster_colors = [cluster_colors, mean_cluster_color];  % save this avg cluster color
     cluster_color_counter = cluster_color_counter + 1;  % I want to know how many clusters I have found so far
     img_mean_cluster = img_mean_cluster + mean_cluster_color * uint8(mask); % color the cluster in the mean cluster img
     
