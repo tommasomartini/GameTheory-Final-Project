@@ -4,17 +4,16 @@
 
 %       TODO
 
-close all;
+% close all;
 clear all;
 clc;
 
-tic
-
 %% Parameters
-sigma = 100;    % standard deviation
+sigma_intensity = 50;    % standard deviation
+sigma_space = 70;  
 % TODO num_cycles should be higher, as 150
 num_cycles = 100;   % number of iterations per cluster
-img_name = 'carib_fish.jpg'; % name of the image
+img_name = 'toucan.jpg'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
 num_clusters = 45;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
@@ -41,10 +40,10 @@ img = img_original;
 % imshow(img_original); title('Original');
 
 % Compute the payoff matrix
-A = get_payoff_int_sp(img_lab, 200, 100);
+A = get_payoff_int_sp(img_lab, sigma_intensity, sigma_space);
 % save('reef_matrix', 'A');
 % load parrot_matrix.mat;
-
+tic
 % Image dimensions
 [img_height, img_width, ~] = size(img);
 n = img_width * img_height;
@@ -163,6 +162,7 @@ for cluster = 1 : num_clusters
 end
 
 cluster_colors = cluster_colors(:, 2 : end);
+toc
 
 disp('Number of clusters: ');
 disp(size(cluster_colors, 2));
@@ -236,8 +236,9 @@ figure(111)
 % view(35, 40);
 % title('Pixel distribution after clustering')
 subplot(121), imshow(scaled_img), axis image; title('Original scaled image')
-subplot(122), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
+subplot(122), imshow(uint8(img_mean_cluster)), axis image; title('Output image RD')
 
+return
 %% Back to the big image
 % I have to pass the img as a row of triples
 dataPts = reshape(img_big_original(:), size(img_big_original, 1) * size(img_big_original, 2), 3);
@@ -275,4 +276,3 @@ imshow(uint8(kk))
 % img_big_cluster = zeros(size(img_big_original));
 % img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
 
-toc

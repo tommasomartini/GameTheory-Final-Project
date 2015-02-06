@@ -1,10 +1,14 @@
 % MY Best Response Dynamics with Fictitious Play
-% many clusters, color
-% needs get_payoff_2.m
+% many clusters, color, BIG IMAGES
+% Needs get_payoff_2.m
+
+%       TODO
 
 close all;
 clear all;
 clc;
+
+tic
 
 %% Parameters
 img_name = 'parrot.png'; % name of the image
@@ -164,14 +168,65 @@ for cluster = 1 : num_clusters
     img_mean_cluster(:, :, 2) = img_mean_cluster(:, :, 2) + mean_cluster_color(2) * uint8(mask);
     img_mean_cluster(:, :, 3) = img_mean_cluster(:, :, 3) + mean_cluster_color(3) * uint8(mask);
     
-    figure; imshow(img_cluster); title('Partial cluster');
+%     figure; imshow(img_cluster); title('Partial cluster');
 end
 
 cluster_colors = cluster_colors(:, 2 : end);
 
-fprintf('Number of found clusters: %d\n', cluster_color_counter - 1);
+fprintf('Number of found clusters: %d\n', size(cluster_colors, 2));
 
-figure; imshow(img_mean_cluster); title('Mean clusters');
+img_mean_cluster = double(img_mean_cluster);
 
+R = img_original_double(:, :, 1);
+G = img_original_double(:, :, 2);
+B = img_original_double(:, :, 3);
+Rc = img_mean_cluster(:, :, 1);
+Gc = img_mean_cluster(:, :, 2);
+Bc = img_mean_cluster(:, :, 3);
+figure(111)
+% subplot(122), hold on 
+% scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
+% scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
+% view(35, 40);
+% title('Pixel distribution after clustering')
+subplot(121), imshow(scaled_img), axis image; title('Original scaled image')
+subplot(122), imshow(uint8(img_mean_cluster)), axis image; title('Output image')
 
+%% Back to the big image
+% I have to pass the img as a row of triples
+dataPts = reshape(img_big_original(:), size(img_big_original, 1) * size(img_big_original, 2), 3);
+dataPts = dataPts';
+centroids = cluster_colors;
+% centroids = 0;
+% tic
+% [clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 10, 10, 0);
+[clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 60, 0);
+% toc
 
+figure(222),clf,hold on
+for k = 1 : size(clustCent, 2)
+    myMembers = clustMembsCell{k};
+    myClustCen = clustCent(:, k);
+%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers))
+%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers), 10, repmat([dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers)], size(myMembers, 2), 1), '.')
+    scatter3(myClustCen(1),myClustCen(2),myClustCen(3), 80, [myClustCen(1),myClustCen(2),myClustCen(3)] / 255, 'o', 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k')
+    view(40,35)
+end
+title(['Pixel space. Number of clusters: ', num2str(size(clustCent, 2))])
+
+% img_big_cluster = zeros(size(img_big_original));
+output_row = zeros(3, length(dataPts));
+for i = 1 : length(dataPts)
+    rel_cluster = point2cluster(i);
+    output_row(:, i) = clustCent(:, rel_cluster);
+end
+
+kk = reshape(output_row', size(img_big_original, 1), size(img_big_original, 2), 3);
+
+figure(333)
+imshow(uint8(kk))
+
+% img_big_cluster = zeros(size(img_big_original));
+% img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
+
+toc
