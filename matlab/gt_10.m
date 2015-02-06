@@ -8,19 +8,19 @@ clear all;
 clc;
 
 %% Parameters
-img_name = 'win2.jpg'; % name of the image
-sigma = 50;    % standard deviation
+img_name = 'colors.jpg'; % name of the image
+sigma = 180;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
 thr = 20;  % percentage of the highest probabilities to keep
 redistribution_factor = 100;
-num_clusters = 3;   % number of clusters to find (should be automatically found!)
+num_clusters = 6;   % number of clusters to find (should be automatically found!)
+scaling_factor = 20;
 
 %% Main body
 
 img_col = imread(img_name); % acquire the image...
 img = rgb2gray(img_col);    % ...and bring it in b&w
 
-scaling_factor = 2;
 img = img(1 : scaling_factor : end, 1 : scaling_factor : end);
 
 [img_height, img_width] = size(img);
