@@ -1,7 +1,6 @@
 % MY Best Response Dynamics with Fictitious Play
-% many clusters, B&W
-% needs get_payoff.m
-
+% many clusters, color
+% needs get_payoff_2.m
 
 close all;
 clear all;
@@ -9,35 +8,37 @@ clc;
 
 %% Parameters
 img_name = 'colors.jpg'; % name of the image
-sigma = 180;    % standard deviation
+sigma = 100;    % standard deviation
 num_cycles = 10;   % number of iterations per cluster (should be automatically found!)
-thr = 20;  % percentage of the highest probabilities to keep
+thr = 10;  % percentage of the highest probabilities to keep
 redistribution_factor = 100;
 num_clusters = 6;   % number of clusters to find (should be automatically found!)
-scaling_factor = 20;
+scaling_factor = 30;
 
 %% Main body
 
-img_col = imread(img_name); % acquire the image...
-img = rgb2gray(img_col);    % ...and bring it in b&w
+img = imread(img_name); % acquire the image...
+% img = rgb2gray(img_col);    % ...and bring it in b&w
 
-img = img(1 : scaling_factor : end, 1 : scaling_factor : end);
+img = img(1 : scaling_factor : end, 1 : scaling_factor : end, :);
 
-[img_height, img_width] = size(img);
+[img_height, img_width, ~] = size(img);
 n = img_width * img_height; % number of pixels
 
 % Show the original image
 figure; imshow(img); title('Original');
 
-A = get_payoff(img, sigma); % compute the payoff matrix
+tic
+A = get_payoff_2(img, sigma); % compute the payoff matrix
+toc
 
 flags = ones(img_height, img_width);    % '0' pixels are already inside a cluster
-cluster_colors = 0;    % contains the colors of the clusters. Needed to assign left pixels
+cluster_colors = zeros(3, 1);    % contains the colors of the clusters. Needed to assign left pixels
 
 % Probability vector. Initially set to a uniform distribution
 x = ones(n, 1) / n;
 
-img_mean_cluster = zeros(img_height, img_width, 'uint8');   % clustered image
+img_mean_cluster = zeros(img_height, img_width, 3, 'uint8');   % clustered image
 
 cluster_color_counter = 1;
 pixels_to_remove = ones(n, 1);
@@ -121,9 +122,9 @@ for cluster = 1 : num_clusters
     x = x ./ max_prob;
     
     %% Find and display the cluster
-    mean_cluster_color = 0;     % mean color of the current cluster
+    mean_cluster_color = zeros(3, 1);     % mean color of the current cluster
     mask = zeros(img_height, img_width);
-    img_cluster = zeros(img_height, img_width); % in this image we show the current cluster
+    img_cluster = zeros(img_height, img_width, 3); % in this image we show the current cluster
     % sum of the probabilities of the chosen pixel. Needed to calculate the
     % mean color of the cluster
     sum_high_probs = 0;
@@ -139,12 +140,14 @@ for cluster = 1 : num_clusters
             end
             
             if flags(yy, xx)    % if the pixel is not assigned to a cluster
-                img_cluster(yy, xx) = 255;  % color the pixel
+                img_cluster(yy, xx, :) = img(yy, xx, :);  % color the pixel
                 mask(yy, xx) = 1;   % fill the mask
                 
                 pixels_to_remove(i) = 0;
                 
-                mean_cluster_color = mean_cluster_color + x(i) * double(img(yy, xx));
+                mean_cluster_color(1) = mean_cluster_color(1) + x(i) * double(img(yy, xx, 1));
+                mean_cluster_color(2) = mean_cluster_color(2) + x(i) * double(img(yy, xx, 2));
+                mean_cluster_color(3) = mean_cluster_color(3) + x(i) * double(img(yy, xx, 3));
             end
         end
     end
@@ -154,12 +157,14 @@ for cluster = 1 : num_clusters
     mean_cluster_color = uint8(mean_cluster_color / sum_high_probs);    % avg color of the current cluster
     cluster_colors = [cluster_colors, mean_cluster_color];  % save this avg cluster color
     cluster_color_counter = cluster_color_counter + 1;  % I want to know how many clusters I have found so far
-    img_mean_cluster = img_mean_cluster + mean_cluster_color * uint8(mask); % color the cluster in the mean cluster img
+    img_mean_cluster(:, :, 1) = img_mean_cluster(:, :, 1) + mean_cluster_color(1) * uint8(mask);
+    img_mean_cluster(:, :, 2) = img_mean_cluster(:, :, 2) + mean_cluster_color(2) * uint8(mask);
+    img_mean_cluster(:, :, 3) = img_mean_cluster(:, :, 3) + mean_cluster_color(3) * uint8(mask);
     
     figure; imshow(img_cluster); title('Partial cluster');
 end
 
-cluster_colors = cluster_colors(2 : end);
+cluster_colors = cluster_colors(:, 2 : end);
 
 fprintf('Number of found clusters: %d\n', cluster_color_counter - 1);
 
