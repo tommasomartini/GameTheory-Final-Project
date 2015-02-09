@@ -9,20 +9,19 @@ clear all;
 clc;
 
 %% Parameters
-sigma_intensity = 50;    % standard deviation
-sigma_space = 70;  
+sigma_intensity = 100;    % standard deviation
+sigma_space = 30;  
 % TODO num_cycles should be higher, as 150
-num_cycles = 100;   % number of iterations per cluster
-img_name = 'carib_fish.jpg'; % name of the image
+num_cycles = 50;   % number of iterations per cluster
+num_cycles_vector = 1 : 10 : 100;
+img_name = 'parrot.png'; % name of the image
 thr = 95;  % percentage of the highest probabilities to keep
-num_clusters = 45;   % number of clusters to find (should be automatically found!)
+num_clusters = 100;   % number of clusters to find (should be automatically found!)
 C = 10^(-5);    % constant to avoid zero denominators
-max_num_assign_cycle = 50;   % maximum number of cycles to assign remaining pixels
-max_window_size = 5;    % maximum dimension of the window to check surrounding pixels
 scaling_factor = 10;
 
-gaussian_window = 50;
-gaussian_variance = 20;
+gaussian_window = 20;
+gaussian_variance = 5;
 
 %% Main body
 img_original = imread(img_name);    % acquire image
@@ -32,8 +31,14 @@ img_big_original = img_original;    % save a copy of the original image
 gaussian_filter = fspecial('gaussian', [gaussian_window, gaussian_window], gaussian_variance);
 img_padded = padarray(img_original, gaussian_window, 'symmetric');
 img_filtered = imfilter(img_padded, gaussian_filter, 'same');
-img_filtered = img_filtered(1 + gaussian_window : end - gaussian_window, )
+img_filtered = img_filtered(1 + gaussian_window : end - gaussian_window, 1 + gaussian_window : end - gaussian_window, :);
+% figure; imshow(img_filtered);
 scaled_img = img_filtered(1 : scaling_factor : end, 1 : scaling_factor : end, :);
+% figure; imshow(scaled_img);
+
+% sssc = img_original(1 : scaling_factor : end, 1 : scaling_factor : end, :);
+% figure; imshow(sssc);
+
 img_original = scaled_img;
 img_original_double = double(img_original); % make a 'double' copy of the image
 
@@ -48,15 +53,23 @@ img = img_original;
 
 % Compute the payoff matrix
 A = get_payoff_int_sp(img_lab, sigma_intensity, sigma_space);
-% save('reef_matrix', 'A');
+% save('parrot', 'A');
 % load parrot_matrix.mat;
-tic
+
+avg_cluster_variances = [];
+
+% qui comincia il for!!!
+for num_it = 1 : length(num_cycles_vector)
+    num_cycles = num_cycles_vector(num_it);
+
+cluster_variances = [];
+
 % Image dimensions
 [img_height, img_width, ~] = size(img);
 n = img_width * img_height;
 
 flags = ones(img_height, img_width);    % '0' pixels are already inside a cluster
-cluster_colors = zeros(3, num_clusters);    % contains the colors of the clusters
+% cluster_colors = zeros(3, num_clusters);    % contains the colors of the clusters
 cluster_colors = zeros(3, 1);    % contains the colors of the clusters
 cluster_color_counter = 1;  % to browse the cluster color list.
 % In the end cluster_color_counter - 1 will be the number of clusters
@@ -154,6 +167,17 @@ for cluster = 1 : num_clusters
     flags = flags - mask;
     
     mean_cluster_color = uint8(mean_cluster_color / sum_high_probs);    % avg cluster color
+    
+    rep_mask = repmat(mask, 1, 1, 3);
+    clust_elems = img_original((rep_mask > 0));
+    pixel_values = reshape(clust_elems, sum(sum(mask)), 3);
+    pixel_values = double(pixel_values');
+    
+    rep_clust_color = repmat(double(mean_cluster_color), 1, size(pixel_values, 2));
+    
+    cluster_variance = mean(sum((pixel_values - rep_clust_color).^2));
+    cluster_variances = [cluster_variances, cluster_variance];
+    
 %     cluster_colors(:, cluster_color_counter) = mean_cluster_color; % save it in the list of colors
     cluster_colors = [cluster_colors, mean_cluster_color]; % save it in the list of colors
     cluster_color_counter = cluster_color_counter + 1;  % update index to color list
@@ -168,118 +192,14 @@ for cluster = 1 : num_clusters
 %     imshow(img_cluster)
 end
 
+% cluster_variances = cluster_variances(:, 2 : end);
+avg_cluster_variances = [avg_cluster_variances, mean(cluster_variances)];
+
+
 cluster_colors = cluster_colors(:, 2 : end);
-toc
-
-disp('Number of clusters: ');
-disp(size(cluster_colors, 2));
-
-%% Assign the remaining pixels
-% Pixels can be assigned by position or resemblance. Here we assign a pixel
-% according to the membership of its neighborhood.
-
-% unassigned_pixels = sum(sum(flags));    % if >=1 there are unassigned pixels and I have to go through the next procedure
-% assign_cycle_counter = 1;
-% window_size = 0;
-% while unassigned_pixels && assign_cycle_counter <= max_num_assign_cycle
-%     unassigned_pixels = 0;  % best case: I'll manage to assign all the remaining pixels
-%     assign_cycle_counter = assign_cycle_counter + 1;    % update the cycle counter
-%     window_size = min(window_size + 1, max_window_size);
-%     for i = 1 : img_height  % for each pixel in the image...
-%         for j = 1 : img_width
-%             if flags(i, j)  % if it is not yet assigned
-%                 
-%                 % Assignation by RESEMBLANCE
-%                 % to do...
-%                 
-%                 % Assignation by POSITION
-%                 color_votes = zeros(1, num_clusters);   % contains the votes for each cluster color
-%                 for k = max(i - window_size, 1) : min(i + window_size, img_height)  % for each pixel around...
-%                     for l = max(j - window_size, 1) : min(j + window_size, img_width)
-%                         curr_col = zeros(3, 1); % color of the current surrounding pixel
-%                         curr_col(1) = img_mean_cluster(k, l, 1);
-%                         curr_col(2) = img_mean_cluster(k, l, 2);
-%                         curr_col(3) = img_mean_cluster(k, l, 3);
-%                         for m = 1 : length(cluster_colors)  % for each color in the list of cluster colrs...
-%                             if sum(curr_col == cluster_colors(:, m)) == 3
-%                                 color_votes(m) = color_votes(m) + 1;
-%                             end
-%                         end
-%                     end
-%                 end
-%                 
-%                 % If there is at least one voted color among the cluster
-%                 % colors...
-%                 if sum(color_votes)
-%                     [~, elected_colors] = max(color_votes); % list of the most voted colors
-%                     elected_color = cluster_colors(:, elected_colors(1));  % one of the most voted colors
-%                     img_mean_cluster(i, j, :) = elected_color;     % assigned that color to the pixel
-%                     flags(i, j) = 0;    % remove the pixel from the flags
-%                 else
-% %                     sub_img = img(max(i - window_size, 1) : min(i + window_size, img_height), max(j - window_size, 1) : min(j + window_size, img_width), :);
-% %                     figure; imshow(sub_img);
-%                     unassigned_pixels = 1;  % repeat the cycle
-%                 end
-%             end
-%         end
-%     end
-% end
-
-% figure
-% imshow(img_mean_cluster); title('Mean cluster');
-
-img_mean_cluster = double(img_mean_cluster);
-
-R = img_original_double(:, :, 1);
-G = img_original_double(:, :, 2);
-B = img_original_double(:, :, 3);
-Rc = img_mean_cluster(:, :, 1);
-Gc = img_mean_cluster(:, :, 2);
-Bc = img_mean_cluster(:, :, 3);
-figure(111)
-subplot(122), hold on 
-scatter3( R(:), G(:), B(:), 80, [R(:), G(:), B(:)] / 255);
-scatter3( Rc(:), Gc(:), Bc(:), 200, [Rc(:), Gc(:), Bc(:)] / 255, 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k');
-view(35, 40);
-title('Pixel distribution after clustering')
-subplot(121), imshow(scaled_img), axis image; title('Original scaled image')
-subplot(122), imshow(uint8(img_mean_cluster)), axis image; title('Output image RD')
-
-return
-%% Back to the big image
-% I have to pass the img as a row of triples
-dataPts = reshape(img_big_original(:), size(img_big_original, 1) * size(img_big_original, 2), 3);
-dataPts = dataPts';
-centroids = cluster_colors;
-centroids = 0;
-% tic
-% [clustCent,point2cluster,clustMembsCell] = meanShiftCentroidsGaussian(dataPts, centroids, 10, 10, 10, 0);
-[clustCent,point2cluster,clustMembsCell] = meanShiftCentroids(dataPts, centroids, 60, 0);
-% toc
-
-figure(222),clf,hold on
-for k = 1 : size(clustCent, 2)
-    myMembers = clustMembsCell{k};
-    myClustCen = clustCent(:, k);
-%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers))
-%     scatter3(dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers), 10, repmat([dataPts(1,myMembers),dataPts(2,myMembers),dataPts(3,myMembers)], size(myMembers, 2), 1), '.')
-    scatter3(myClustCen(1),myClustCen(2),myClustCen(3), 80, [myClustCen(1),myClustCen(2),myClustCen(3)] / 255, 'o', 'MarkerFaceColor', 'flat', 'MarkerEdgeColor', 'k')
-    view(40,35)
-end
-title(['Pixel space. Number of clusters: ', num2str(size(clustCent, 2))])
-
-% img_big_cluster = zeros(size(img_big_original));
-output_row = zeros(3, length(dataPts));
-for i = 1 : length(dataPts)
-    rel_cluster = point2cluster(i);
-    output_row(:, i) = clustCent(:, rel_cluster);
 end
 
-kk = reshape(output_row', size(img_big_original, 1), size(img_big_original, 2), 3);
 
-figure(444)
-imshow(uint8(kk))
 
-% img_big_cluster = zeros(size(img_big_original));
-% img_big_cluster(1 : scaling_factor : end, 1 : scaling_factor : end, :) = img_mean_cluster;
+% Inter-cluster variance
 
