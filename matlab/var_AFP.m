@@ -11,11 +11,13 @@ clc;
 %% Parameters
 sigma_intensity = 100;    % standard deviation
 sigma_space = 30;
-num_cycles_vector = 1 : 10 : 200;
+sigma_intensity = 50;    % standard deviation
+sigma_space = 70;
+num_cycles_vector = 50 : 1 : 50;
 img_name = 'parrot.png'; % name of the image
-thr = 95;  % percentage of the highest probabilities to keep
+thr = 10;  % percentage of the highest probabilities to keep
+redistribution_factor = 100;
 num_clusters = 100;   % number of clusters to find (should be automatically found!)
-C = 10^(-5);    % constant to avoid zero denominators
 scaling_factor = 10;
 gaussian_window = 20;
 gaussian_variance = 5;
@@ -29,13 +31,7 @@ gaussian_filter = fspecial('gaussian', [gaussian_window, gaussian_window], gauss
 img_padded = padarray(img_original, gaussian_window, 'symmetric');
 img_filtered = imfilter(img_padded, gaussian_filter, 'same');
 img_filtered = img_filtered(1 + gaussian_window : end - gaussian_window, 1 + gaussian_window : end - gaussian_window, :);
-% figure; imshow(img_filtered);
 scaled_img = img_filtered(1 : scaling_factor : end, 1 : scaling_factor : end, :);
-% figure; imshow(scaled_img);
-
-% sssc = img_original(1 : scaling_factor : end, 1 : scaling_factor : end, :);
-% figure; imshow(sssc);
-
 img_original = scaled_img;
 img_original_double = double(img_original); % make a 'double' copy of the image
 
@@ -99,21 +95,64 @@ for num_it = 1 : length(num_cycles_vector)
         
         %% FOR: iterations with num_cycle
         for cycle = 1 : num_cycles
-%             y = zeros(n, 1);
-%             pure_payoffs = A * x;
-%             den = x' * A * x;
-%             for i = 1 : n
-%                 % fare cosi non falsa i risultati? se ho payoff molto piccoli
-%                 % rischio di avere una frazione uguale a uno! Voglio C
-%                 % infinitesimo!!
-%                 y(i) = x(i) * (pure_payoffs(i) + C) / (den + C);
+            opponent_payoff = A * x;
+            
+            max_val = max(opponent_payoff);
+            opponent_BR = zeros(n, 1);
+            opponent_BR(opponent_payoff == max_val) = 1;
+            opponent_BR = opponent_BR ./ sum(opponent_BR);  % BR sums to one in case of multiple best responses
+            
+            my_payoff = A' * opponent_BR;
+            
+            my_avg_payoff = my_payoff' * x;
+            my_avg_gain = my_payoff - my_avg_payoff;
+            
+            % In order not to fixing choosing the same exact pixel, the diagonal of
+            % the payoff matrix is set to zero. Thus, if I play the same pixel of
+            % my opponent, we both get zero, even though it belongs to the same
+            % cluster. I don't want it to be my best response, but I want it to be
+            % a feasible choice! Since the matrix is non zero and the only zero
+            % values are in the diagonal, the only way I can get a zero payoff is
+            % playing the same pixel. Therefore playing the same pixel leads me to
+            % the lower gain. I make it positive in order to count it as a good
+            % pixel.
+            %
+            % This case is lucky! But what if the max positive is lower than the
+            % min negative?? The same pixel becomes the best response.
+            %
+            % SOLUTION: I don't increse its probabilty! It is likely already quite
+            % high
+            
+            min_gain_pos = find(my_avg_gain == -my_avg_payoff);
+            my_avg_gain(min_gain_pos) = 0;
+            
+            pos_gains_ind = find(my_avg_gain > 0);
+            neg_gains_ind = find(my_avg_gain < 0);
+            
+            sum_pos = sum(my_avg_gain(pos_gains_ind));
+            sum_neg = -sum(my_avg_gain(neg_gains_ind));
+            
+            pos_increments = my_avg_gain(pos_gains_ind) ./ (redistribution_factor * sum_pos);
+            neg_increments = my_avg_gain(neg_gains_ind) ./ (redistribution_factor * sum_neg);
+            
+            %     sum(pos_increments) + sum(neg_increments)
+            
+            new_x = x;
+            new_x(pos_gains_ind) = new_x(pos_gains_ind) + pos_increments;
+            new_x(neg_gains_ind) = new_x(neg_gains_ind) + neg_increments;
+            
+%             min_new_x = min(new_x);
+%             if min_new_x < 0
+%                 new_x = new_x - min_new_x;
+%                 new_x = new_x ./ sum(new_x);
 %             end
-%             x = y;
-            x = (x .* (A * x + C)) ./ (x' * A * x + C);
-%             if sum(x - xX)~= 0
-%                 disp(['errore nel calcolo di xX: ', num2str(sum(x - xXm))])
-%                 pause;
-%             end
+            
+            min_new_x = min(new_x);
+            new_x = new_x - min_new_x;
+            max_new_x = max(new_x);
+            
+            
+            x =  new_x;
         end
         
         %% Normalize the probabilities
@@ -183,6 +222,9 @@ for num_it = 1 : length(num_cycles_vector)
         
     inter_cluster_variances = [inter_cluster_variances, mean(sum((repmat(mean_col, 1, size(cluster_colors, 2)) - double(cluster_colors)).^2))];
     intra_cluster_variances = [intra_cluster_variances, mean(clusters_variances)];
+    
+%     figure
+%     imshow(img_mean_cluster)
     
 end
 
